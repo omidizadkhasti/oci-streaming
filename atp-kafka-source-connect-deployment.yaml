@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: atp-kafka-source-connect-service
+  labels:
+    app: atp-kafka-source-connect
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8083
+  selector:
+    app: atp-kafka-source-connect
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atp-kafka-source-connect-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: atp-kafka-source-connect
+  template:
+    metadata:
+      labels:
+        app: atp-kafka-source-connect
+    spec:
+      containers:
+        - name: atp-kafka-source-connect
+          image: <Region>.ocir.io/<Tenancy>/oss-kafka-connect:v1
+          volumeMounts:
+            - name: connect-distributed
+              mountPath: /kafka/config/connect-distributed.properties
+              subPath: connect-distributed.properties
+          env:
+            - name: REST_ADVERTISED_HOST_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BOOTSTRAP_SERVERS
+              value: <OCI Streamin pool endpoint>:9092
+            - name: REST_PORT
+              value: "8083"
+            - name: SASL_MECHANISM
+              value: PLAIN
+            - name: SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: SASL_JAAS_CONFIG
+              value: org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL connection username>" password="<Auth Token>";
+            - name: GROUP_ID
+              value: atp-kafta-source-connect-group
+            - name: PRODUCER_SASL_MECHANISM
+              value: PLAIN
+            - name: PRODUCER_SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: PRODUCER_SASL_JAAS_CONFIG
+              value: org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL connection username>" password="<Auth Token>;
+            - name: CONSUMER_SASL_MECHANISM
+              value: PLAIN
+            - name: CONSUMER_SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: CONSUMER_SASL_JAAS_CONFIG
+              value: org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL connection username>" password="<Auth Token>;
+            - name: CONFIG_STORAGE_TOPIC
+              value: <Kafka connect configuration OCID>-config
+            - name: OFFSET_STORAGE_TOPIC
+              value: <Kafka connect configuration OCID>-offset
+            - name: STATUS_STORAGE_TOPIC
+              value: <Kafka connect configuration OCID>-status
+            - name: CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: KEY_CONVERTER
+              value: org.apache.kafka.connect.storage.StringConverter
+            - name: VALUE_CONVERTER
+              value: org.apache.kafka.connect.json.JsonConverter
+            - name: KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "true"
+            - name: KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "true"
+          ports:
+            - name: kafka-connect
+              containerPort: 8083
+              protocol: TCP
+      imagePullSecrets:
+        - name: ocir-secret-mel
+      volumes:
+        - name: connect-distributed
+          configMap:
+            name: atp-kafka-source-connect-configmap
