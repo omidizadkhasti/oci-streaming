@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atp-kafka-source-connect-configmap
+  labels:
+    app: atp-kafka-source-connect
+data:
+  connect-distributed.properties: |+
+    group.id=atp-kafta-source-connect-group
+    bootstrap.servers=<OCI Streaming Endpoint>:9092
+    sasl.mechanism=PLAIN
+    security.protocol=SASL_SSL
+    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL Connection Username>" password="<Auth Token>";
+    producer.sasl.mechanism=PLAIN
+    producer.security.protocol=SASL_SSL
+    producer.sasl.jaas.config= org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL Connection Username>" password="<Auth Token>";
+    consumer.sasl.mechanism=PLAIN
+    consumer.security.protocol=SASL_SSL
+    consumer.sasl.jaas.config= org.apache.kafka.common.security.plain.PlainLoginModule required username="<SASL Connection Username>" password="<Auth Token>";
+    config.storage.replication.factor=1
+    config.storage.partitions=1
+    config.storage.topic=<Kafka connec configuration>-config
+    status.storage.replication.factor=1
+    status.storage.partitions=1
+    status.storage.topic=<Kafka connec configuration>-status
+    offset.storage.replication.factor=1
+    offset.storage.partitions=1
+    offset.storage.topic=<Kafka connec configuration>-offset
+    offset.flush.interval.ms=10000
+    offset.flush.timeout.ms=5000
+    key.converter=org.apache.kafka.connect.storage.StringConverter
+    value.converter=org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable=false
+    value.converter.schemas.enable=true
+    internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+    internal.value.converter=org.apache.kafka.connect.json.JsonConverter
