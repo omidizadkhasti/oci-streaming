@@ -45,7 +45,7 @@ def getSchema(schemaRegUrl, schemaId):
   return resp.json()  
     
 
-def main()
+def main():
   topic = 'mytopic'
   schema_registry_conf = {'url': 'http://172.16.1.125:30100/api/artifacts'}
   schema_registry_client = SchemaRegistryClient(schema_registry_conf)
