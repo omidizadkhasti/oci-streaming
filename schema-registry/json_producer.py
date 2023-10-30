@@ -51,14 +51,14 @@ def main()
   schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
   string_serializer = StringSerializer('utf_8')
-  json_serializer = JSONSerializer(schema_str, schema_registry_client, user_to_dict)
+  #json_serializer = JSONSerializer(schema_str, schema_registry_client, user_to_dict)
 
 
 
 
 
-producer.produce('mytopic', data.encode('utf-8'), callback=delivery_report)
+#producer.produce('mytopic', data.encode('utf-8'), callback=delivery_report)
 
 # Wait for any outstanding messages to be delivered and delivery report
 # callbacks to be triggered.
-producer.flush()
+#producer.flush()
