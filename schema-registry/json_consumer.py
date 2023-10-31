@@ -5,10 +5,10 @@ import json
 import requests
 import base64
 
-from confluent_kafka import Producer
+from confluent_kafka import Consumer
 from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.schema_registry.json_schema import JSONSerializer
+from confluent_kafka.schema_registry.json_schema import JSONDeserializer
 
 class Device(object):
        def __init__(self, deviceId, deviceLocation, deviceTemp, timestamp):
@@ -46,7 +46,7 @@ def getConsumer():
   consumer_conf.update(sasl_conf)
   consumer = Consumer(consumer_conf)
   
-  produconsumer = Consumer(consumer_conf)
+  consumer = Consumer(consumer_conf)
   return consumer  
 
 def getSchema(schemaRegUrl, schemaId):
@@ -100,25 +100,29 @@ def main():
   schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
   string_serializer = StringSerializer('utf_8')
-  json_serializer = JSONDeserializer(schema_str, from_dict=device_to_dict)
+  json_deserializer = JSONDeserializer(schema_str, from_dict=device_to_dict)
 
   consumer = getConsumer()
 
   consumer.subscribe([topic])
 
-  while true;
+  while True:
     try:
         msg = consumer.poll(1.0)
         if msg is None:
            continue
-          
-        device = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE)
-        if device is not None:
-           print("Device ID: {} Device Temperature: {}".format(device.deviceId, device.deviceTemp))
-    except KeyboardIntrupt:
+        
+        print(str(msg.topic())+str(msg.key())+str(msg.value()))
+        if str(msg.topic())=='iottopic':
+            device = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+              
+            if device is not None:
+               print("Device ID: {} Device Temperature: {}".format(device.deviceId, device.deviceTemp))
+
+    except KeyboardInterrupt:
         break;
 
 
-    consumer.close()
+  consumer.close()
 
 main()

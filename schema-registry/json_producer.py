@@ -4,6 +4,7 @@ from uuid import uuid4
 import json
 import requests
 import base64
+from datetime import datetime
 
 from confluent_kafka import Producer
 from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
@@ -59,7 +60,7 @@ def getSchema(schemaRegUrl, schemaId):
     
 
 def main():
-  topic = 'mytopic'
+  topic = "mytopic"
 
   schema_str = """
   {
@@ -101,20 +102,21 @@ def main():
   while True:
      producer.poll(0.0)
      try:
+         print(topic)
          deviceId = input("Enter Device ID: ")
          deviceLocation = input("Device Location: ")
          deviceTemp = input("Device Temperature: ")
-         device = Device(deviceId=deviceId,
+         device = Device(deviceId=int(deviceId),
                          deviceLocation=deviceLocation,
-                         deviceTemp=deviceTemp,
+                         deviceTemp=float(deviceTemp),
                          timestamp=datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
          producer.produce(topic=topic,
                           key=string_serializer(str(uuid4())),
-                          value=json_serializer(user, SerializationContext(topic, MessageField.VALUE)),
+                          value=json_serializer(device, SerializationContext(topic, MessageField.VALUE)),
                           on_delivery=delivery_report)
-      except KeyboardInterrupt:
+     except KeyboardInterrupt:
           break
-      except ValueError:
+     except ValueError:
           print("Invalid input, discarding record...")
           continue
        
