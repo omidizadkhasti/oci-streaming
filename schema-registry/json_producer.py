@@ -10,6 +10,19 @@ from confluent_kafka.serialization import StringSerializer, SerializationContext
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.json_schema import JSONSerializer
 
+class Device(object):
+       def __init__(self, deviceId, deviceLocation, deviceTemp, timestamp):
+        self.deviceId = deviceId
+        self.deviceLocation = deviceLocation
+        self.deviceTemp = deviceTemp
+        self.timestamp = timestamp
+
+def device_to_dict(device, ctx):
+    return dict(deviceId=device.deviceId,
+                deviceLocation=device.deviceLocation,
+                deviceTemp=device.deviceTemp,
+                timestamp=device.timestamp
+               )
 
 def delivery_report(err, msg):
   """ Called once for each message produced to indicate delivery result.
@@ -19,7 +32,7 @@ def delivery_report(err, msg):
   else:
       print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
-def createProducer():
+def getProducer():
   producer_conf = {'bootstrap.servers': 'lsrdtszyacea.streaming.ap-melbourne-1.oci.oraclecloud.com:9092'}
   sasl_conf = {'security.protocol':'SASL_SSL','sasl.mechanism':'PLAIN','sasl.username':'apaccpt03/oracleidentitycloudservice/omid.izadkhasti@oracle.com/ocid1.streampool.oc1.ap-melbourne-1.amaaaaaap77apcqa7t4whz6xuhv33f6xsul2dkdn3ewmxbs3lsrdtszyacea','sasl.password':'r6Ubv{j<rZNn+<vf9v<M'}
   
@@ -47,13 +60,50 @@ def getSchema(schemaRegUrl, schemaId):
 
 def main():
   topic = 'mytopic'
+
+  schema_str = """
+  {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "iotDeviceTemprature",
+    "description": "IOT Device Temprature",
+    "type": "object",
+    "properties": {
+      "deviceId": {
+        "description": "Device ID",
+        "type": "integer"
+      },
+      "deviceLocation": {
+        "description": "Device Location",
+        "type": "strinbg"
+      },
+      "deviceTemp": {
+        "description": "Device Temprature",
+        "type": "number"
+      },
+      "timestamp": {
+        "description": "Timestamp",
+        "type": "string"
+      }
+    },
+    "required": [ "deviceId", "deviceLocation", "deviceTemp" ]
+  }
+  """
+  
   schema_registry_conf = {'url': 'http://172.16.1.125:30200'}
   schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
   string_serializer = StringSerializer('utf_8')
-  print(schema_registry_client.get_schema('iotDeviceTemprature'))
-  #json_serializer = JSONSerializer(schema_str, schema_registry_client, user_to_dict)
+  json_serializer = JSONSerializer(schema_str, schema_registry_client, device_to_dict)
+  print(json_serializer)
 
+  producer = getProducer()
+  device = Device(deviceId=100,deviceLocation="inventory",deviceTemp=45.5,timestamp="2023-10-29 19:24:08")
+  print(device)
+  
+  producer.produce(topic=topic,
+                 key=string_serializer(str(uuid4())),
+                 value=json_serializer(device, SerializationContext(topic, MessageField.VALUE)),
+                 on_delivery=delivery_report)
 
 
 main()
