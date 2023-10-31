@@ -74,7 +74,7 @@ def main():
       },
       "deviceLocation": {
         "description": "Device Location",
-        "type": "strinbg"
+        "type": "string"
       },
       "deviceTemp": {
         "description": "Device Temprature",
