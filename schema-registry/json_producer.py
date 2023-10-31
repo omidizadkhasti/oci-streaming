@@ -105,6 +105,7 @@ def main():
                  value=json_serializer(device, SerializationContext(topic, MessageField.VALUE)),
                  on_delivery=delivery_report)
 
+  producer.flush()
 
 main()
 
