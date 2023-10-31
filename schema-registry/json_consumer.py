@@ -106,7 +106,7 @@ def main():
 
   consumer.subscribe([topic])
 
-  white true;
+  while true;
     try:
         msg = consumer.poll(1.0)
         if msg is None:
