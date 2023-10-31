@@ -47,15 +47,16 @@ def getSchema(schemaRegUrl, schemaId):
 
 def main():
   topic = 'mytopic'
-  schema_registry_conf = {'url': 'http://172.16.1.125:30100/api/artifacts'}
+  schema_registry_conf = {'url': 'http://172.16.1.125:30200'}
   schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
   string_serializer = StringSerializer('utf_8')
+  print(schema_registry_client.get_schema('iotDeviceTemprature'))
   #json_serializer = JSONSerializer(schema_str, schema_registry_client, user_to_dict)
 
 
 
-
+main()
 
 #producer.produce('mytopic', data.encode('utf-8'), callback=delivery_report)
 
