@@ -97,20 +97,28 @@ def main():
   print(json_serializer)
 
   producer = getProducer()
-  device = Device(deviceId=100,deviceLocation="inventory",deviceTemp=45.5,timestamp="2023-10-29 19:24:08")
-  print(device)
-  
-  producer.produce(topic=topic,
-                 key=string_serializer(str(uuid4())),
-                 value=json_serializer(device, SerializationContext(topic, MessageField.VALUE)),
-                 on_delivery=delivery_report)
 
+  while True:
+     producer.poll(0.0)
+     try:
+         deviceId = input("Enter Device ID: ")
+         deviceLocation = input("Device Location: ")
+         deviceTemp = input("Device Temperature: ")
+         device = Device(deviceId=deviceId,
+                         deviceLocation=deviceLocation,
+                         deviceTemp=deviceTemp,
+                         timestamp=datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+         producer.produce(topic=topic,
+                          key=string_serializer(str(uuid4())),
+                          value=json_serializer(user, SerializationContext(topic, MessageField.VALUE)),
+                          on_delivery=delivery_report)
+      except KeyboardInterrupt:
+          break
+      except ValueError:
+          print("Invalid input, discarding record...")
+          continue
+       
   producer.flush()
 
 main()
 
-#producer.produce('mytopic', data.encode('utf-8'), callback=delivery_report)
-
-# Wait for any outstanding messages to be delivered and delivery report
-# callbacks to be triggered.
-#producer.flush()
